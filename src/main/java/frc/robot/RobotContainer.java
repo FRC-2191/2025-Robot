@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -33,8 +34,9 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     // private final CommandXboxController joystick = new CommandXboxController(0);
-    private final CommandJoystick joystickLeft = new CommandJoystick(0);
-    private final CommandJoystick joystickRight = new CommandJoystick(1);
+    // private final CommandJoystick joystickLeft = new CommandJoystick(0);
+    // private final CommandJoystick joystickRight = new CommandJoystick(1);
+    private final CommandGenericHID proController = new CommandGenericHID(2);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -48,9 +50,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystickLeft.getY()* MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystickLeft.getX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystickRight.getX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-proController.getRawAxis(1)* MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-proController.getRawAxis(0) * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-proController.getRawAxis(2) * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -67,7 +69,7 @@ public class RobotContainer {
         // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystickLeft.button(5).onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        proController.button(5).onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
