@@ -24,8 +24,8 @@ public class TunerConstants {
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     private static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(100).withKI(0).withKD(0.5)
-        .withKS(0.1).withKV(2.66).withKA(0)
+        .withKP(300).withKI(0).withKD(22)
+        .withKS(8).withKV(0).withKA(0)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
@@ -35,7 +35,7 @@ public class TunerConstants {
 
     // The closed-loop output type to use for the steer motors;
     // This affects the PID/FF gains for the steer motors
-    private static final ClosedLoopOutputType kSteerClosedLoopOutput = ClosedLoopOutputType.Voltage;
+    private static final ClosedLoopOutputType kSteerClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
     // The closed-loop output type to use for the drive motors;
     // This affects the PID/FF gains for the drive motors
     private static final ClosedLoopOutputType kDriveClosedLoopOutput = ClosedLoopOutputType.Voltage;
@@ -59,10 +59,10 @@ public class TunerConstants {
     private static final TalonFXConfiguration steerInitialConfigs = new TalonFXConfiguration()
         .withCurrentLimits(
             new CurrentLimitsConfigs()
-                // Swerve azimuth does not require much torque output, so we can set a relatively low
-                // stator current limit to help avoid brownouts without impacting performance.
-                .withStatorCurrentLimit(Amps.of(60))
-                .withStatorCurrentLimitEnable(true)
+            // Swerve azimuth does not require much torque output, so we can set a relatively low
+            // supply current limit to help avoid brownouts without impacting performance.
+                .withSupplyCurrentLimit(Amps.of(20))
+                .withSupplyCurrentLimitEnable(true)
         );
     private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
