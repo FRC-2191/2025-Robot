@@ -11,6 +11,6 @@ public abstract class JoystickUtils {
     }
 
     public static double applyScaler (double input) {
-        return (0.7 * input + 0.4 * Math.pow(input, 3));
+        return (0.7 * input + 0.3 * Math.pow(input, 3));
     }
 }
