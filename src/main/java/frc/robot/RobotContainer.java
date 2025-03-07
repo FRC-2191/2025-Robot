@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -19,10 +20,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DumbSubsystem;
+import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.utils.JoystickUtils;
 
 public class RobotContainer {
@@ -38,12 +40,13 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    // private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandXboxController xbox = new CommandXboxController(2);
     private final CommandJoystick joystickLeft = new CommandJoystick(0);
     private final CommandJoystick joystickRight = new CommandJoystick(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    public final DumbSubsystem motor = new DumbSubsystem();
+    public final ElevatorSubsystem elevator = new ElevatorSubsystem();
+    // public final DumbSubsystem motor = new DumbSubsystem();
     
     /* Path follower */
     private final AutoFactory autoFactory;
@@ -73,9 +76,11 @@ public class RobotContainer {
             )
         );
 
-        motor.setDefaultCommand(Commands.run(() -> motor.runMotor(0), motor));
+        elevator.setDefaultCommand(Commands.run(() -> elevator.setVoltage(0), elevator));
 
-        joystickRight.button(8).whileTrue (Commands.run(() -> motor.runMotor(joystickRight.getZ()), motor));
+        // motor.setDefaultCommand(Commands.run(() -> motor.runMotor(0)));
+
+        // joystickRight.button(8).whileTrue (Commands.run(() -> motor.runMotor(joystickRight.getZ()), motor));
 
         // joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystickRight.trigger().whileTrue(drivetrain.applyRequest(() ->
@@ -90,7 +95,24 @@ public class RobotContainer {
         joystickLeft.button(7).and(joystickRight.button(11)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystickLeft.button(5).onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        joystickLeft.button(2).onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+        // Elevator Setpoints
+        joystickLeft.button(4).onTrue(Commands.runOnce(()-> elevator.setGoal(new State(3, 0)), elevator)
+            .andThen(Commands.run(elevator::moveToGoal, elevator)));
+
+        joystickLeft.button(5).onTrue(Commands.runOnce(()-> elevator.setGoal(new State(10, 0)), elevator)
+            .andThen(Commands.run(elevator::moveToGoal, elevator)));
+
+        joystickRight.button(4).onTrue(Commands.runOnce(()-> elevator.setGoal(new State(20, 0)), elevator)
+            .andThen(Commands.run(elevator::moveToGoal, elevator)));
+
+        joystickRight.button(5).onTrue(Commands.runOnce(()-> elevator.setGoal(new State(30, 0)), elevator)
+            .andThen(Commands.run(elevator::moveToGoal, elevator)));
+
+            
+        xbox.x().whileTrue(Commands.run(() -> 
+        elevator.setVoltage(-xbox.getLeftY()*10), elevator));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
