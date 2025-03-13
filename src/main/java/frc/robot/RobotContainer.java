@@ -149,6 +149,12 @@ public class RobotContainer {
             coralArm.stopIntake();
         }));
 
+        //Automatically collapse superstructure to resting position after intaking or outtaking
+        joystickLeft.trigger().or(joystickRight.trigger()).onFalse(Commands.waitSeconds(0.5).andThen(generateSuperstructureCommand(
+            new State(ElevatorConstants.resting, 0),
+            new State(AlgaeArmConstants.resting, 0),
+            new State(CoralArmConstants.resting, 0))));
+
         // Climber Controls
         joystickLeft.button(2).whileTrue(Commands.run(climber::climb));
         joystickLeft.button(11).onTrue(Commands.run(climber::hold));
