@@ -74,6 +74,7 @@ public class CoralSubsystem implements Subsystem{
         intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         currentState.position = encoder.getPosition();
+        goal.position = currentState.position;
     }
 
 

@@ -36,6 +36,7 @@ public final class Constants {
         //THE CLIMBER OF DOOM
         public static final int mainmotorID = 3;
         public static final int followerMotorID = 4;
+        public static final int currentLimit = 60;
     }
 
     public static class CoralArmConstants {

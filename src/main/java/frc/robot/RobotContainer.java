@@ -22,9 +22,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.AlgaeSubsystem;
+import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.CoralSubsystem;
-import frc.robot.subsystems.DumbSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.utils.JoystickUtils;
 
@@ -49,7 +49,7 @@ public class RobotContainer {
     public final ElevatorSubsystem elevator = new ElevatorSubsystem();
     public final AlgaeSubsystem algaeArm = new AlgaeSubsystem();
     public final CoralSubsystem coralArm = new CoralSubsystem();
-    // public final DumbSubsystem motor = new DumbSubsystem();
+    public final ClimberSubsystem climber = new ClimberSubsystem();
     
     /* Path follower */
     private final AutoFactory autoFactory;
@@ -87,10 +87,7 @@ public class RobotContainer {
         elevator.setDefaultCommand(Commands.run(elevator::moveToGoal, elevator));
         algaeArm.setDefaultCommand(Commands.run(algaeArm::moveToGoal, algaeArm));
         coralArm.setDefaultCommand(Commands.run(coralArm::moveToGoal, coralArm));
-
-        // motor.setDefaultCommand(Commands.run(() -> motor.runMotor(0)));
-
-        // joystickRight.button(8).whileTrue (Commands.run(() -> motor.runMotor(joystickRight.getZ()), motor));
+        climber.setDefaultCommand(Commands.run(climber::stop, climber));
 
         // joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystickRight.trigger().whileTrue(drivetrain.applyRequest(() ->
@@ -156,15 +153,17 @@ public class RobotContainer {
             coralArm.stopIntake();
         }));
 
+        // Climber Controls
+        joystickLeft.button(2).whileTrue(Commands.run(climber::climb));
+        joystickLeft.button(11).onTrue(Commands.run(climber::hold));
+        joystickLeft.button(6).whileTrue(Commands.run(climber::retract));
+
             
         xbox.x().whileTrue(Commands.run(() -> 
             elevator.setVoltage(-xbox.getLeftY()*8), elevator));
-        
         xbox.a().whileTrue(Commands.run(() -> 
             algaeArm.setVoltage(-xbox.getLeftY()*3), algaeArm));
-
         xbox.b().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (0, 0)), coralArm));
-        
         xbox.y().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (-25, 0)), coralArm));
         
 
