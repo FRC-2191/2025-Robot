@@ -29,12 +29,18 @@ public class AlgaeSubsystem implements Subsystem{
 
     private TrapezoidProfile.State goal = new TrapezoidProfile.State();
     private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
+    private TrapezoidProfile.State currentState = new TrapezoidProfile.State();
 
     ArmFeedforward feedforward = new ArmFeedforward(
         AlgaeArmConstants.kS,
         AlgaeArmConstants.kG,
         AlgaeArmConstants.kV,
         AlgaeArmConstants.kA);
+
+        TrapezoidProfile profile = new TrapezoidProfile(
+                new TrapezoidProfile.Constraints(
+                        AlgaeArmConstants.maxVelocity,
+                        AlgaeArmConstants.maxAcceleration));
 
     public AlgaeSubsystem() {
         pivotMotor = new SparkFlex(AlgaeArmConstants.pivotMotorID, MotorType.kBrushless);
@@ -72,20 +78,18 @@ public class AlgaeSubsystem implements Subsystem{
         pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         followerMotor.configure(followerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        currentState.position = encoder.getPosition();
+        goal.position = currentState.position;
     }
-
-    TrapezoidProfile profile = new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(
-                    AlgaeArmConstants.maxVelocity,
-                    AlgaeArmConstants.maxAcceleration));
-
-
+    
     public void setVoltage(double voltage) {
         pivotMotor.setVoltage(voltage);
     }
 
     public void setGoal(TrapezoidProfile.State newGoal) {
         goal = newGoal;
+        setpoint = profile.calculate(RobotConstants.kDt, currentState, goal);
     }
 
     public void moveToGoal() {
@@ -112,6 +116,8 @@ public class AlgaeSubsystem implements Subsystem{
 
     @Override
     public void periodic() {
+        currentState.position = encoder.getPosition();
+        currentState.velocity = encoder.getVelocity();
         SmartDashboard.putNumber("Algae Pivot Position", encoder.getPosition());
         SmartDashboard.putNumber("Algae Pivot Setpoint", setpoint.position);
         SmartDashboard.putNumber("Algae Pivot Voltage", pivotMotor.getBusVoltage() * pivotMotor.getAppliedOutput());
