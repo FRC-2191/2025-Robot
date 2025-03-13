@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import frc.robot.Constants.AlgaeArmConstants;
+import frc.robot.Constants.CoralArmConstants;
 import frc.robot.Constants.RobotConstants;
 
 import com.revrobotics.AbsoluteEncoder;
@@ -21,7 +21,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 
-public class AlgaeSubsystem implements Subsystem{
+public class CoralSubsystem implements Subsystem{
     SparkFlex pivotMotor;
     SparkFlex intakeMotor;
     SparkFlex followerMotor;
@@ -29,55 +29,52 @@ public class AlgaeSubsystem implements Subsystem{
 
     private TrapezoidProfile.State goal = new TrapezoidProfile.State();
     private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
+    private TrapezoidProfile.State currentState = new TrapezoidProfile.State();
+
+    TrapezoidProfile profile = new TrapezoidProfile(
+            new TrapezoidProfile.Constraints(
+                    CoralArmConstants.maxVelocity,
+                    CoralArmConstants.maxAcceleration));
 
     ArmFeedforward feedforward = new ArmFeedforward(
-        AlgaeArmConstants.kS,
-        AlgaeArmConstants.kG,
-        AlgaeArmConstants.kV,
-        AlgaeArmConstants.kA);
+        CoralArmConstants.kS,
+        CoralArmConstants.kG,
+        CoralArmConstants.kV,
+        CoralArmConstants.kA);
 
-    public AlgaeSubsystem() {
-        pivotMotor = new SparkFlex(AlgaeArmConstants.pivotMotorID, MotorType.kBrushless);
-        intakeMotor = new SparkFlex(AlgaeArmConstants.intakeMotorID, MotorType.kBrushless);
-        followerMotor = new SparkFlex(AlgaeArmConstants.followerMotorID, MotorType.kBrushless);
+    public CoralSubsystem() {
+        pivotMotor = new SparkFlex(CoralArmConstants.pivotMotorID, MotorType.kBrushless);
+        intakeMotor = new SparkFlex(CoralArmConstants.intakeMotorID, MotorType.kBrushless);
         encoder = pivotMotor.getAbsoluteEncoder();
         SparkFlexConfig pivotConfig = new SparkFlexConfig();
         SparkFlexConfig intakeConfig = new SparkFlexConfig();
-        SparkFlexConfig followerConfig = new SparkFlexConfig();
 
         pivotConfig
-            .smartCurrentLimit(AlgaeArmConstants.pivotCurrentLimit)
+            .smartCurrentLimit(CoralArmConstants.pivotCurrentLimit)
             .idleMode(IdleMode.kBrake)
             .inverted(true);
-        pivotConfig.absoluteEncoder.positionConversionFactor(AlgaeArmConstants.sensorToMechanismRatio)
-            .zeroOffset(AlgaeArmConstants.absoluteOffset)
+        pivotConfig.absoluteEncoder.positionConversionFactor(CoralArmConstants.sensorToMechanismRatio)
+            .velocityConversionFactor(6)
+            .zeroOffset(CoralArmConstants.absoluteOffset)
             .inverted(true)
             .zeroCentered(true);
         pivotConfig.closedLoop
                     .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                     .positionWrappingInputRange(-180, 180)
                     .positionWrappingEnabled(true)
-                    .pid(AlgaeArmConstants.kP, AlgaeArmConstants.kI, AlgaeArmConstants.kD);
+                    .pid(CoralArmConstants.kP, CoralArmConstants.kI, CoralArmConstants.kD);
 
         intakeConfig
-            .smartCurrentLimit(AlgaeArmConstants.intakeCurrentLimit)
+            .smartCurrentLimit(CoralArmConstants.intakeCurrentLimit)
             .idleMode(IdleMode.kBrake)
-            .inverted(false);
-
-        followerConfig
-            .idleMode(IdleMode.kBrake)
-            .follow(intakeMotor, true);
+            .inverted(true);
 
 
         pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        followerMotor.configure(followerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    }
 
-    TrapezoidProfile profile = new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(
-                    AlgaeArmConstants.maxVelocity,
-                    AlgaeArmConstants.maxAcceleration));
+        currentState.position = encoder.getPosition();
+    }
 
 
     public void setVoltage(double voltage) {
@@ -86,6 +83,7 @@ public class AlgaeSubsystem implements Subsystem{
 
     public void setGoal(TrapezoidProfile.State newGoal) {
         goal = newGoal;
+        setpoint = profile.calculate(RobotConstants.kDt, currentState, goal);
     }
 
     public void moveToGoal() {
@@ -99,7 +97,7 @@ public class AlgaeSubsystem implements Subsystem{
     }
 
     public void intake() {
-        intakeMotor.set(.6);
+        intakeMotor.set(0.6);
     }
 
     public void outtake() {
@@ -112,8 +110,10 @@ public class AlgaeSubsystem implements Subsystem{
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Algae Pivot Position", encoder.getPosition());
-        SmartDashboard.putNumber("Algae Pivot Setpoint", setpoint.position);
-        SmartDashboard.putNumber("Algae Pivot Voltage", pivotMotor.getBusVoltage() * pivotMotor.getAppliedOutput());
+        currentState.position = encoder.getPosition();
+        currentState.velocity = encoder.getVelocity();
+        SmartDashboard.putNumber("Coral Pivot Position", currentState.position);
+        SmartDashboard.putNumber("Coral Pivot Setpoint", setpoint.position);
+        SmartDashboard.putNumber("Coral Pivot Voltage", pivotMotor.getBusVoltage() * pivotMotor.getAppliedOutput());
     }
 }

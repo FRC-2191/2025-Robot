@@ -1,7 +1,7 @@
 package frc.robot.utils;
 
 public abstract class JoystickUtils {
-    private static final double deadzone = 0.1;
+    private static final double deadzone = 0.08;
 
     public static double applyDeadzone (double input) {
         if (Math.abs(input) < deadzone) {

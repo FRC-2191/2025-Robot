@@ -4,10 +4,12 @@
 
 package frc.robot;
 
+import org.littletonrobotics.urcl.URCL;
+
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.Constants.RobotConstants;
 
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
@@ -17,6 +19,12 @@ public class Robot extends TimedRobot {
   public Robot() {
     m_robotContainer = new RobotContainer();
     // addPeriodic(() -> CommandScheduler.getInstance().run(), RobotConstants.kDt);
+  }
+
+  @Override
+  public void robotInit() {
+    DataLogManager.start();
+    URCL.start();
   }
 
   @Override

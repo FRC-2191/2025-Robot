@@ -19,6 +19,7 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class ElevatorSubsystem implements Subsystem{
     SparkFlex motor1;
@@ -67,7 +68,6 @@ public class ElevatorSubsystem implements Subsystem{
 
     public void setVoltage(double voltage) {
         motor1.setVoltage(voltage);
-        System.out.println(voltage);
     }
 
     public void setGoal(TrapezoidProfile.State newGoal) {
@@ -91,6 +91,22 @@ public class ElevatorSubsystem implements Subsystem{
             ClosedLoopSlot.kSlot0,
             feedforward.calculate(setpoint.velocity, ElevatorConstants.maxAcceleration * acceleration_direction),
             ArbFFUnits.kVoltage);
+    }
+
+    public Trigger atL2() {
+        return new Trigger(() -> goal.position == RobotConstants.l2);
+    }
+    public Trigger atL3() {
+        return new Trigger(() -> goal.position == RobotConstants.l3);
+    }
+    public Trigger atL4() {
+        return new Trigger(() -> goal.position == RobotConstants.l4);
+    }
+    public Trigger atRest() {
+        return new Trigger(() -> goal.position == RobotConstants.resting);
+    }
+    public Trigger atNet() {
+        return new Trigger(() -> goal.position == RobotConstants.net);
     }
 
     @Override

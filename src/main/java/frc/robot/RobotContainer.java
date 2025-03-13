@@ -13,16 +13,17 @@ import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.Constants.ElevatorConstants;
+import frc.robot.Constants.RobotConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.AlgaeSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.CoralSubsystem;
 import frc.robot.subsystems.DumbSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.utils.JoystickUtils;
@@ -46,6 +47,8 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public final ElevatorSubsystem elevator = new ElevatorSubsystem();
+    public final AlgaeSubsystem algaeArm = new AlgaeSubsystem();
+    public final CoralSubsystem coralArm = new CoralSubsystem();
     // public final DumbSubsystem motor = new DumbSubsystem();
     
     /* Path follower */
@@ -54,8 +57,13 @@ public class RobotContainer {
     private final AutoChooser autoChooser = new AutoChooser();
 
     public RobotContainer() {
-        autoFactory = drivetrain.createAutoFactory();
-        autoRoutines = new AutoRoutines(autoFactory);
+        autoFactory = new AutoFactory(
+            () -> drivetrain.getState().Pose,
+            drivetrain::resetPose,
+            drivetrain::followPath,
+            true,
+            drivetrain);
+        autoRoutines = new AutoRoutines(autoFactory, this);
 
         autoChooser.addRoutine("Test", autoRoutines::simplePathAuto);
         autoChooser.addRoutine("Score", autoRoutines::scoringAuto);
@@ -77,6 +85,8 @@ public class RobotContainer {
         );
 
         elevator.setDefaultCommand(Commands.run(() -> elevator.setVoltage(0), elevator));
+        algaeArm.setDefaultCommand(Commands.run(() -> algaeArm.setVoltage(0), algaeArm));
+        coralArm.setDefaultCommand(Commands.run(() -> coralArm.setVoltage(0), coralArm));
 
         // motor.setDefaultCommand(Commands.run(() -> motor.runMotor(0)));
 
@@ -95,24 +105,70 @@ public class RobotContainer {
         joystickLeft.button(7).and(joystickRight.button(11)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystickLeft.button(2).onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        joystickLeft.button(5).onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         // Elevator Setpoints
-        joystickLeft.button(4).onTrue(Commands.runOnce(()-> elevator.setGoal(new State(3, 0)), elevator)
-            .andThen(Commands.run(elevator::moveToGoal, elevator)));
+        joystickRight.button(2).onTrue(generateSuperstructureCommand(
+            new State(RobotConstants.resting, 0),
+            new State(-30, 0),
+            new State(-30, 0)));
+        
+        joystickRight.button(4).onTrue(generateSuperstructureCommand(
+            new State(RobotConstants.l2, 0),
+            new State(-30, 0),
+            new State(-30, 0)));
+        
+        joystickRight.button(3).onTrue(generateSuperstructureCommand(
+            new State(RobotConstants.l3, 0),
+            new State(-30, 0),
+            new State(-30, 0)));
+        
+        joystickRight.button(5).onTrue(generateSuperstructureCommand(
+            new State(RobotConstants.l4, 0),
+            new State(-50, 0),
+            new State(-30, 0)));
+        
+        joystickLeft.button(3).onTrue(generateSuperstructureCommand(
+            new State(RobotConstants.net, 0),
+            new State(20, 0),
+            new State(80, 0)));
 
-        joystickLeft.button(5).onTrue(Commands.runOnce(()-> elevator.setGoal(new State(10, 0)), elevator)
-            .andThen(Commands.run(elevator::moveToGoal, elevator)));
+        
+        joystickLeft.trigger().and(elevator.atL2()).whileTrue(generateIntakingSuperstructureCommand(
+            new State(RobotConstants.l2, 0),
+            new State(-30, 0),
+            new State(30, 0)));
 
-        joystickRight.button(4).onTrue(Commands.runOnce(()-> elevator.setGoal(new State(20, 0)), elevator)
-            .andThen(Commands.run(elevator::moveToGoal, elevator)));
+        joystickLeft.trigger().and(elevator.atNet()).whileTrue(Commands.runOnce(() -> 
+            algaeArm.setGoal(new State(-10, 0)))
+            .andThen(Commands.run(() -> {
+            algaeArm.moveToGoal();
+            algaeArm.intake();
+        }, coralArm, algaeArm).finallyDo(() -> {
+            algaeArm.stopIntake();
+        })));
 
-        joystickRight.button(5).onTrue(Commands.runOnce(()-> elevator.setGoal(new State(30, 0)), elevator)
-            .andThen(Commands.run(elevator::moveToGoal, elevator)));
+        joystickRight.trigger().whileTrue(Commands.run(() -> {
+            algaeArm.outtake();
+            coralArm.outtake();
+        }).finallyDo(() -> {
+            algaeArm.stopIntake();
+            coralArm.stopIntake();
+        }));
 
             
         xbox.x().whileTrue(Commands.run(() -> 
-        elevator.setVoltage(-xbox.getLeftY()*10), elevator));
+            elevator.setVoltage(-xbox.getLeftY()*8), elevator));
+        
+        xbox.a().whileTrue(Commands.run(() -> 
+            algaeArm.setVoltage(-xbox.getLeftY()*3), algaeArm));
+
+        xbox.b().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (0, 0)), coralArm)
+            .andThen(Commands.run(coralArm::moveToGoal)));
+        
+        xbox.y().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (-25, 0)), coralArm)
+            .andThen(Commands.run(coralArm::moveToGoal)));
+        
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
@@ -120,5 +176,36 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         /* Run the routine selected from the auto chooser */
         return autoChooser.selectedCommand();
+    }
+
+    public Command generateSuperstructureCommand(State elevatorGoal, State algaeGoal, State coralGoal) {
+        return Commands.runOnce(()-> {
+            elevator.setGoal(elevatorGoal);
+            algaeArm.setGoal(algaeGoal);
+            coralArm.setGoal(coralGoal);}, elevator, algaeArm, coralArm).andThen(Commands.run(() -> {
+                elevator.moveToGoal();
+                algaeArm.moveToGoal();
+                coralArm.moveToGoal();
+            }, elevator, algaeArm, coralArm));
+    }
+
+    public Command generateIntakingSuperstructureCommand(State elevatorGoal, State algaeGoal, State coralGoal) {
+        return Commands.runOnce(()-> {
+            elevator.setGoal(elevatorGoal);
+            algaeArm.setGoal(algaeGoal);
+            coralArm.setGoal(coralGoal);}, elevator, algaeArm, coralArm).andThen(Commands.run(() -> {
+                elevator.moveToGoal();
+                algaeArm.moveToGoal();
+                coralArm.moveToGoal();
+                algaeArm.intake();
+                coralArm.intake();
+            }, elevator, algaeArm, coralArm).finallyDo(() -> {
+                coralArm.stopIntake();
+                algaeArm.stopIntake();}));
+    }
+
+    public Command generateCoralOuttakeCommand() {
+        return Commands.run(coralArm::outtake, coralArm)
+            .finallyDo(coralArm::stopIntake);
     }
 }
