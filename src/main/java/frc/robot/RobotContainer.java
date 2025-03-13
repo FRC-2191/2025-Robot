@@ -36,8 +36,6 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric() 
             // .withDeadband(MaxSpeed * 0.08).withRotationalDeadband(MaxAngularRate * 0.08) //Add a 8% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -88,11 +86,6 @@ public class RobotContainer {
         algaeArm.setDefaultCommand(Commands.run(algaeArm::moveToGoal, algaeArm));
         coralArm.setDefaultCommand(Commands.run(coralArm::moveToGoal, coralArm));
         climber.setDefaultCommand(Commands.run(climber::stop, climber));
-
-        // joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystickRight.trigger().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(Rotation2d.kZero)
-        ));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
