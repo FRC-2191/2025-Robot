@@ -42,7 +42,6 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController xbox = new CommandXboxController(2);
     private final CommandJoystick joystickLeft = new CommandJoystick(0);
     private final CommandJoystick joystickRight = new CommandJoystick(1);
 
@@ -159,15 +158,6 @@ public class RobotContainer {
         joystickLeft.button(2).whileTrue(Commands.run(climber::climb));
         joystickLeft.button(11).onTrue(Commands.run(climber::hold));
         joystickLeft.button(6).whileTrue(Commands.run(climber::retract));
-
-            
-        xbox.x().whileTrue(Commands.run(() -> 
-            elevator.setVoltage(-xbox.getLeftY()*8), elevator));
-        xbox.a().whileTrue(Commands.run(() -> 
-            algaeArm.setVoltage(-xbox.getLeftY()*3), algaeArm));
-        xbox.b().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (0, 0)), coralArm));
-        xbox.y().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (-25, 0)), coralArm));
-        
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
