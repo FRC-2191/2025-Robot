@@ -4,7 +4,7 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
-import frc.robot.Constants.RobotConstants;
+import frc.robot.Constants.ElevatorConstants;
 
 public class AutoRoutines {
     private final AutoFactory m_factory;
@@ -37,7 +37,7 @@ public class AutoRoutines {
         );
 
         scoring.done().onTrue(m_container.generateSuperstructureCommand(
-            new State (RobotConstants.l4, 0),
+            new State (ElevatorConstants.l4, 0),
             new State (-50, 0),
             new State(-30, 0))
             .withTimeout(2)

@@ -94,19 +94,19 @@ public class ElevatorSubsystem implements Subsystem{
     }
 
     public Trigger atL2() {
-        return new Trigger(() -> goal.position == RobotConstants.l2);
+        return new Trigger(() -> goal.position == ElevatorConstants.l2);
     }
     public Trigger atL3() {
-        return new Trigger(() -> goal.position == RobotConstants.l3);
+        return new Trigger(() -> goal.position == ElevatorConstants.l3);
     }
     public Trigger atL4() {
-        return new Trigger(() -> goal.position == RobotConstants.l4);
+        return new Trigger(() -> goal.position == ElevatorConstants.l4);
     }
     public Trigger atRest() {
-        return new Trigger(() -> goal.position == RobotConstants.resting);
+        return new Trigger(() -> goal.position == ElevatorConstants.resting);
     }
     public Trigger atNet() {
-        return new Trigger(() -> goal.position == RobotConstants.net);
+        return new Trigger(() -> goal.position == ElevatorConstants.net);
     }
 
     @Override
