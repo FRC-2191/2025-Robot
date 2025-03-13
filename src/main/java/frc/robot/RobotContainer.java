@@ -84,9 +84,9 @@ public class RobotContainer {
             )
         );
 
-        elevator.setDefaultCommand(Commands.run(() -> elevator.setVoltage(0), elevator));
-        algaeArm.setDefaultCommand(Commands.run(() -> algaeArm.setVoltage(0), algaeArm));
-        coralArm.setDefaultCommand(Commands.run(() -> coralArm.setVoltage(0), coralArm));
+        elevator.setDefaultCommand(Commands.run(elevator::moveToGoal, elevator));
+        algaeArm.setDefaultCommand(Commands.run(algaeArm::moveToGoal, algaeArm));
+        coralArm.setDefaultCommand(Commands.run(coralArm::moveToGoal, coralArm));
 
         // motor.setDefaultCommand(Commands.run(() -> motor.runMotor(0)));
 
@@ -163,11 +163,9 @@ public class RobotContainer {
         xbox.a().whileTrue(Commands.run(() -> 
             algaeArm.setVoltage(-xbox.getLeftY()*3), algaeArm));
 
-        xbox.b().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (0, 0)), coralArm)
-            .andThen(Commands.run(coralArm::moveToGoal)));
+        xbox.b().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (0, 0)), coralArm));
         
-        xbox.y().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (-25, 0)), coralArm)
-            .andThen(Commands.run(coralArm::moveToGoal)));
+        xbox.y().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (-25, 0)), coralArm));
         
 
         drivetrain.registerTelemetry(logger::telemeterize);
@@ -182,11 +180,7 @@ public class RobotContainer {
         return Commands.runOnce(()-> {
             elevator.setGoal(elevatorGoal);
             algaeArm.setGoal(algaeGoal);
-            coralArm.setGoal(coralGoal);}, elevator, algaeArm, coralArm).andThen(Commands.run(() -> {
-                elevator.moveToGoal();
-                algaeArm.moveToGoal();
-                coralArm.moveToGoal();
-            }, elevator, algaeArm, coralArm));
+            coralArm.setGoal(coralGoal);}, elevator, algaeArm, coralArm);
     }
 
     public Command generateIntakingSuperstructureCommand(State elevatorGoal, State algaeGoal, State coralGoal) {
