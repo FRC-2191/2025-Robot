@@ -123,6 +123,10 @@ public class RobotContainer {
             new State(AlgaeArmConstants.net, 0),
             new State(CoralArmConstants.net, 0)));
 
+        joystickLeft.trigger().and(elevator.atRest()).whileTrue(generateIntakingSuperstructureCommand(
+            new State(ElevatorConstants.resting, 0),
+            new State(AlgaeArmConstants.resting, 0),
+            new State(CoralArmConstants.resting, 0)));
         
         joystickLeft.trigger().and(elevator.atL2()).whileTrue(generateIntakingSuperstructureCommand(
             new State(ElevatorConstants.feederStation, 0),
@@ -138,8 +142,12 @@ public class RobotContainer {
             algaeArm.stopIntake();
         })));
 
-        joystickRight.trigger().whileTrue(Commands.run(() -> {
-            algaeArm.outtake();
+        joystickRight.trigger().and(elevator.atRest().or(elevator.atNet())).whileTrue(Commands.run(algaeArm::outtake, algaeArm).finallyDo(algaeArm::stopIntake));
+
+        joystickRight.trigger().and(elevator.atL2()).whileTrue(Commands.run(coralArm::outtake, coralArm).finallyDo(coralArm::stopIntake));
+
+        joystickRight.trigger().and(elevator.atL3().or(elevator.atL4())).whileTrue(Commands.run(() -> {
+            algaeArm.intake();
             coralArm.outtake();
         }).finallyDo(() -> {
             algaeArm.stopIntake();
