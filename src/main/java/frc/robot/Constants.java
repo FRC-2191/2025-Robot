@@ -4,12 +4,6 @@ public final class Constants {
 
     public static class RobotConstants {
         public static final double kDt = 0.02;        
-
-        public static final double resting = 2;
-        public static final double l2 = 4.65;
-        public static final double l3 = 19.57;
-        public static final double l4 = 42.61;
-        public static final double net = 64;
     }
 
     public static class ElevatorConstants {
@@ -29,6 +23,13 @@ public final class Constants {
         public static final double maxVelocity = 30;
         public static final double maxAcceleration = 60;
         public static final double rotationstoinches = 0.345;
+
+        public static final double resting = 2;
+        public static final double l2 = 4.65;
+        public static final double l3 = 19.57;
+        public static final double l4 = 42.61;
+        public static final double net = 64;
+        public static final double feederStation = 10;
 
     }
 
@@ -58,6 +59,13 @@ public final class Constants {
         public static final double maxAcceleration = 720;
         public static final double sensorToMechanismRatio = 360;
         public static final double absoluteOffset = 0.1560117;
+
+        public static final double resting = -30;
+        public static final double diagonalBranch = -30;
+        public static final double l4 = -30;
+        public static final double feederStation = 30;
+        public static final double tucked = -80;
+        public static final double net = 85;
     }
 
     public static class AlgaeArmConstants {
@@ -80,7 +88,13 @@ public final class Constants {
         public static final double maxAcceleration = 360;
         public static final double sensorToMechanismRatio = 360;
         public static final double absoluteOffset = 0.2126032;
+
+        public static final double resting = -50;
+        public static final double reef = -30;
+        public static final double l4 = -50;
+        public static final double feederStation = -60;
+        public static final double tucked = -80;
+        public static final double net = 20;
+        public static final double intercept = -10;
     }
-
-
 }

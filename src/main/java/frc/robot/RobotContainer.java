@@ -4,6 +4,17 @@
 
 package frc.robot;
 
+import frc.robot.Constants.AlgaeArmConstants;
+import frc.robot.Constants.CoralArmConstants;
+import frc.robot.Constants.ElevatorConstants;
+import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.AlgaeSubsystem;
+import frc.robot.subsystems.ClimberSubsystem;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.CoralSubsystem;
+import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.utils.JoystickUtils;
+
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -19,14 +30,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.Constants.RobotConstants;
-import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.AlgaeSubsystem;
-import frc.robot.subsystems.ClimberSubsystem;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.CoralSubsystem;
-import frc.robot.subsystems.ElevatorSubsystem;
-import frc.robot.utils.JoystickUtils;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -99,38 +102,38 @@ public class RobotContainer {
 
         // Elevator Setpoints
         joystickRight.button(2).onTrue(generateSuperstructureCommand(
-            new State(RobotConstants.resting, 0),
-            new State(-30, 0),
-            new State(-30, 0)));
+            new State(ElevatorConstants.resting, 0),
+            new State(AlgaeArmConstants.resting, 0),
+            new State(CoralArmConstants.resting, 0)));
         
         joystickRight.button(4).onTrue(generateSuperstructureCommand(
-            new State(RobotConstants.l2, 0),
-            new State(-30, 0),
-            new State(-30, 0)));
+            new State(ElevatorConstants.l2, 0),
+            new State(AlgaeArmConstants.resting, 0),
+            new State(CoralArmConstants.diagonalBranch, 0)));
         
         joystickRight.button(3).onTrue(generateSuperstructureCommand(
-            new State(RobotConstants.l3, 0),
-            new State(-30, 0),
-            new State(-30, 0)));
+            new State(ElevatorConstants.l3, 0),
+            new State(AlgaeArmConstants.reef, 0),
+            new State(CoralArmConstants.diagonalBranch, 0)));
         
         joystickRight.button(5).onTrue(generateSuperstructureCommand(
-            new State(RobotConstants.l4, 0),
-            new State(-50, 0),
-            new State(-30, 0)));
+            new State(ElevatorConstants.l4, 0),
+            new State(AlgaeArmConstants.l4, 0),
+            new State(CoralArmConstants.l4, 0)));
         
         joystickLeft.button(3).onTrue(generateSuperstructureCommand(
-            new State(RobotConstants.net, 0),
-            new State(20, 0),
-            new State(80, 0)));
+            new State(ElevatorConstants.net, 0),
+            new State(AlgaeArmConstants.net, 0),
+            new State(CoralArmConstants.net, 0)));
 
         
         joystickLeft.trigger().and(elevator.atL2()).whileTrue(generateIntakingSuperstructureCommand(
-            new State(RobotConstants.l2, 0),
-            new State(-30, 0),
-            new State(30, 0)));
+            new State(ElevatorConstants.feederStation, 0),
+            new State(AlgaeArmConstants.feederStation, 0),
+            new State(CoralArmConstants.feederStation, 0)));
 
         joystickLeft.trigger().and(elevator.atNet()).whileTrue(Commands.runOnce(() -> 
-            algaeArm.setGoal(new State(-10, 0)))
+            algaeArm.setGoal(new State(AlgaeArmConstants.intercept, 0)))
             .andThen(Commands.run(() -> {
             algaeArm.moveToGoal();
             algaeArm.intake();
