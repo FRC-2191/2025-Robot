@@ -9,12 +9,12 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
-
-
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -28,7 +28,8 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
+import frc.robot.LimelightHelpers;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -39,6 +40,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
+
+    private PIDController sidewaysController = new PIDController(0.1, 0, 0);
+
+    private PIDController depthController = new PIDController(0.1, 0, 0);
+    
+    private final SwerveRequest.FieldCentricFacingAngle drive = new SwerveRequest.FieldCentricFacingAngle()
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -351,5 +359,27 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         Matrix<N3, N1> visionMeasurementStdDevs
     ) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
+    }
+
+    public void autoAlign() {
+        double heading = switch ((int) LimelightHelpers.getFiducialID("")) {
+            case 10, 18 -> 0;
+            case 11, 17 -> 60;
+            case 6, 22 -> 120;
+            case 7, 21 -> 180;
+            case 8, 20 -> 240;
+            case 9, 19 -> 300;
+            case 1 -> 306;
+            case 2 -> 54;
+            case 12 -> 234;
+            case 13 -> 126;
+            default -> 0;
+        };
+        setControl(drive.withHeadingPID(0, 0, 0)
+            .withVelocityY(MathUtil.clamp(sidewaysController.calculate(LimelightHelpers.getTX(""), 5.0), -0.15, 0.15) * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond))
+            .withVelocityX(MathUtil.clamp(depthController.calculate(LimelightHelpers.getTA(""), 7.5), -0.15, 0.15))
+            .withTargetDirection(Rotation2d.fromDegrees(heading))
+            .withHeadingPID(0, 0, 0));
+        System.out.println(MathUtil.clamp(sidewaysController.calculate(LimelightHelpers.getTX(""), 5.0), -0.15, 0.15));
     }
 }

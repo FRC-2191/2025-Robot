@@ -79,8 +79,7 @@ public class AlgaeSubsystem implements Subsystem{
         intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         followerMotor.configure(followerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        currentState.position = encoder.getPosition();
-        goal.position = currentState.position;
+        goal.position = AlgaeArmConstants.tucked;
     }
     
     public void setVoltage(double voltage) {
@@ -94,12 +93,14 @@ public class AlgaeSubsystem implements Subsystem{
 
     public void moveToGoal() {
         setpoint = profile.calculate(RobotConstants.kDt, setpoint, goal);
+        double arbFF = feedforward.calculate(Rotation2d.fromDegrees(encoder.getPosition()).getRadians(), setpoint.velocity);
         pivotMotor.getClosedLoopController().setReference(
             setpoint.position,
             ControlType.kPosition,
             ClosedLoopSlot.kSlot0,
-            feedforward.calculate(Rotation2d.fromDegrees(encoder.getPosition()).getRadians(), setpoint.velocity),
+            arbFF,
             ArbFFUnits.kVoltage);
+        SmartDashboard.putNumber("arbFF", arbFF);
     }
 
     public void intake() {

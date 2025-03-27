@@ -9,7 +9,6 @@ import frc.robot.Constants.CoralArmConstants;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.AlgaeSubsystem;
-import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.CoralSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
@@ -27,6 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 public class RobotContainer {
@@ -42,12 +42,13 @@ public class RobotContainer {
 
     private final CommandJoystick joystickLeft = new CommandJoystick(0);
     private final CommandJoystick joystickRight = new CommandJoystick(1);
+    
+    private final CommandXboxController xbox = new CommandXboxController(2);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public final ElevatorSubsystem elevator = new ElevatorSubsystem();
     public final AlgaeSubsystem algaeArm = new AlgaeSubsystem();
     public final CoralSubsystem coralArm = new CoralSubsystem();
-    public final ClimberSubsystem climber = new ClimberSubsystem();
     
     /* Path follower */
     private final AutoFactory autoFactory;
@@ -63,8 +64,9 @@ public class RobotContainer {
             drivetrain);
         autoRoutines = new AutoRoutines(autoFactory, this);
 
-        autoChooser.addRoutine("Test", autoRoutines::simplePathAuto);
-        autoChooser.addRoutine("Score", autoRoutines::scoringAuto);
+        autoChooser.addRoutine("Center", autoRoutines::simplePathAuto);
+        autoChooser.addRoutine("Right", autoRoutines::rightAuto);
+        autoChooser.addRoutine("Left", autoRoutines::leftAuto);
         SmartDashboard.putData("Auto Chooser", autoChooser);
 
         configureBindings();
@@ -85,7 +87,8 @@ public class RobotContainer {
         elevator.setDefaultCommand(Commands.run(elevator::moveToGoal, elevator));
         algaeArm.setDefaultCommand(Commands.run(algaeArm::moveToGoal, algaeArm));
         coralArm.setDefaultCommand(Commands.run(coralArm::moveToGoal, coralArm));
-        climber.setDefaultCommand(Commands.run(climber::stop, climber));
+
+        joystickLeft.button(4).whileTrue(Commands.run(drivetrain::autoAlign, drivetrain));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
@@ -101,37 +104,37 @@ public class RobotContainer {
         joystickRight.button(2).onTrue(generateSuperstructureCommand(
             new State(ElevatorConstants.resting, 0),
             new State(AlgaeArmConstants.resting, 0),
-            new State(CoralArmConstants.resting, 0)));
+            new State(CoralArmConstants.resting, 0)).withName("resting"));
         
         joystickRight.button(4).onTrue(generateSuperstructureCommand(
             new State(ElevatorConstants.l2, 0),
             new State(AlgaeArmConstants.resting, 0),
-            new State(CoralArmConstants.diagonalBranch, 0)));
+            new State(CoralArmConstants.diagonalBranch, 0)).withName("L2"));
         
         joystickRight.button(3).onTrue(generateSuperstructureCommand(
             new State(ElevatorConstants.l3, 0),
             new State(AlgaeArmConstants.reef, 0),
-            new State(CoralArmConstants.diagonalBranch, 0)));
+            new State(CoralArmConstants.diagonalBranch, 0)).withName("L3"));
         
         joystickRight.button(5).onTrue(generateSuperstructureCommand(
             new State(ElevatorConstants.l4, 0),
             new State(AlgaeArmConstants.l4, 0),
-            new State(CoralArmConstants.l4, 0)));
+            new State(CoralArmConstants.l4, 0)).withName("L4"));
         
         joystickLeft.button(3).onTrue(generateSuperstructureCommand(
             new State(ElevatorConstants.net, 0),
             new State(AlgaeArmConstants.net, 0),
-            new State(CoralArmConstants.net, 0)));
+            new State(CoralArmConstants.net, 0)).withName("net"));
 
         joystickLeft.trigger().and(elevator.atRest()).whileTrue(generateIntakingSuperstructureCommand(
             new State(ElevatorConstants.resting, 0),
             new State(AlgaeArmConstants.resting, 0),
-            new State(CoralArmConstants.resting, 0)));
+            new State(CoralArmConstants.resting, 0)).withName("general intake"));
         
-        joystickLeft.trigger().and(elevator.atL2()).whileTrue(generateIntakingSuperstructureCommand(
+        joystickLeft.trigger().and(elevator.atL2()).onTrue(generateIntakingSuperstructureCommand(
             new State(ElevatorConstants.feederStation, 0),
             new State(AlgaeArmConstants.feederStation, 0),
-            new State(CoralArmConstants.feederStation, 0)));
+            new State(CoralArmConstants.feederStation, 0)).withName("feederstation"));
 
         joystickLeft.trigger().and(elevator.atNet()).whileTrue(Commands.runOnce(() -> 
             algaeArm.setGoal(new State(AlgaeArmConstants.intercept, 0)))
@@ -158,12 +161,22 @@ public class RobotContainer {
         joystickLeft.trigger().or(joystickRight.trigger()).onFalse(Commands.waitSeconds(0.5).andThen(generateSuperstructureCommand(
             new State(ElevatorConstants.resting, 0),
             new State(AlgaeArmConstants.resting, 0),
-            new State(CoralArmConstants.resting, 0))));
+            new State(CoralArmConstants.resting, 0))).withName("Collapse"));
+        
 
-        // Climber Controls
-        joystickLeft.button(2).whileTrue(Commands.run(climber::climb));
-        joystickLeft.button(11).onTrue(Commands.run(climber::hold));
-        joystickLeft.button(6).whileTrue(Commands.run(climber::retract));
+        joystickRight.button(2).onTrue(generateSuperstructureCommand(
+            new State(ElevatorConstants.resting, 0),
+            new State(AlgaeArmConstants.tucked, 0),
+            new State(CoralArmConstants.tucked, 0)));
+            
+            
+        xbox.x().whileTrue(Commands.run(() -> 
+        elevator.setVoltage(-xbox.getLeftY()*8), elevator));
+    xbox.a().whileTrue(Commands.run(() -> 
+        algaeArm.setVoltage(-xbox.getLeftY()*3), algaeArm));
+        xbox.b().whileTrue(Commands.run(() -> 
+            coralArm.setVoltage(-xbox.getLeftY()*3), coralArm));
+    xbox.y().onTrue(Commands.runOnce(() -> coralArm.setGoal(new State (-25, 0)), coralArm));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
@@ -184,7 +197,7 @@ public class RobotContainer {
         return Commands.runOnce(()-> {
             elevator.setGoal(elevatorGoal);
             algaeArm.setGoal(algaeGoal);
-            coralArm.setGoal(coralGoal);}, elevator, algaeArm, coralArm).andThen(Commands.run(() -> {
+            coralArm.setGoal(coralGoal);}, elevator, algaeArm, coralArm).withName("Intake Pivot").andThen(Commands.run(() -> {
                 elevator.moveToGoal();
                 algaeArm.moveToGoal();
                 coralArm.moveToGoal();
@@ -192,7 +205,7 @@ public class RobotContainer {
                 coralArm.intake();
             }, elevator, algaeArm, coralArm).finallyDo(() -> {
                 coralArm.stopIntake();
-                algaeArm.stopIntake();}));
+                algaeArm.stopIntake();})).withName("Intake Run");
     }
 
     public Command generateCoralOuttakeCommand() {

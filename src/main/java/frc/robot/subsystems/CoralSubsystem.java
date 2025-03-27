@@ -73,8 +73,7 @@ public class CoralSubsystem implements Subsystem{
         pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        currentState.position = encoder.getPosition();
-        goal.position = currentState.position;
+        goal.position = CoralArmConstants.tucked;
     }
 
 
