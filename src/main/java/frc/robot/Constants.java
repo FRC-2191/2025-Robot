@@ -6,6 +6,14 @@ public final class Constants {
         public static final double kDt = 0.02;        
     }
 
+    public static class VisionConstants {
+        public static final double reefLeftY = 0;
+        public static final double reefRightY = 0;
+        public static final double reefX = -3;
+        public static final double coralX = 0;
+        public static final double coralY = 0;
+    }
+
     public static class ElevatorConstants {
         //Elavator thingy
         public static final int mainMotorID = 1;

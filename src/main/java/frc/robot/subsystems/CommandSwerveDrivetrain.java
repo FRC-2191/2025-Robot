@@ -1,7 +1,11 @@
 package frc.robot.subsystems;
 
+import frc.robot.Constants.VisionConstants;
+
 import static edu.wpi.first.units.Units.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -14,11 +18,15 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -60,6 +68,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final PIDController m_pathXController = new PIDController(10, 0, 0);
     private final PIDController m_pathYController = new PIDController(10, 0, 0);
     private final PIDController m_pathThetaController = new PIDController(7, 0, 0);
+    AprilTagFieldLayout tags = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -362,6 +371,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void autoAlign() {
+
+        List<Pose2d> waypoints = new ArrayList<>();
+
+        for (int i=6;i<12;i++) {
+            waypoints.add(tags.getTagPose(i).get().toPose2d().transformBy(new Transform2d(VisionConstants.reefX, VisionConstants.reefLeftY, Rotation2d.kZero)));
+            waypoints.add(tags.getTagPose(i).get().toPose2d().transformBy(new Transform2d(VisionConstants.reefX, VisionConstants.reefRightY, Rotation2d.kZero)));
+        }
+
+        for (int i=17;i<23;i++) {
+            waypoints.add(tags.getTagPose(i).get().toPose2d().transformBy(new Transform2d(VisionConstants.reefX, VisionConstants.reefLeftY, Rotation2d.kZero)));
+            waypoints.add(tags.getTagPose(i).get().toPose2d().transformBy(new Transform2d(VisionConstants.reefX, VisionConstants.reefRightY, Rotation2d.kZero)));
+        }
+        
         double heading = switch ((int) LimelightHelpers.getFiducialID("")) {
             case 10, 18 -> 0;
             case 11, 17 -> 60;
